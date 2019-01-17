@@ -1,4 +1,4 @@
-2.over() 
+over() 
 exercise 1 select first_name,last_name, years_worked,avg(years_worked)over() from employee where department_id in (1,3,5) 
 exercise 2 select purchase.id,department.name,item,price,min(price)over(),price-min(price)over() from purchase join department on purchase.department_id=department.id 3. OVER(PARTITION BY) 14.exercise 1 select first_name,last_name,department,salary,min(salary)over(partition by department),max(salary)over(partition by department) from employee; 15.exercise 2 select first_name,last_name, department,salary,cast(salary as numeric)/sum(salary)over(partition by department) from employee; 4. Ranking Functions exercise 1 select name,average_rating,rank()over(order by average_rating desc) from application; exercise 2 with ranking as (select name,downloads,rank()over(order by downloads desc) as rank from application ) select name,downloads from ranking where rank = 3;
 
@@ -21,3 +21,90 @@ Window functions - evaluation order
 Exercise 1 select bucket,min(rating),max(rating) from (select rating,ntile(4)over(order by rating)as bucket from book) c group by bucket;
 Exercise 2 select author_id,count(id)as number_of_books,rank()over(order by count(id) desc ) from book group by author_id;
 Exercise 3 select publish_year,count(id),lag(count(id))over(order by publish_year) from book group by publish_year order by publish_year;
+
+Q1
+select first_name,last_name,age,avg(age)over()
+from doctor；
+
+Q2
+select id,category,price,sum(price)over(partition by category)
+from procedure;
+
+Q3
+select p.name,d.first_name,d.last_name,p.score,rank()over(partition by p.category order by p.score desc)
+from procedure p
+join doctor d
+on p.doctor_id=d.id;
+
+Q4
+with ranking as (
+select doctor_id,name,procedure_date,price,rank()over(order by price desc) as rank
+  from procedure 
+) 
+select doctor_id,name,procedure_date,price
+from ranking
+where rank = 3;
+
+Q5
+select procedure_date, doctor_id,category,name,score, avg(score)over(partition by category order by procedure_date rows between 2 preceding and 3 following)
+from procedure;
+
+Q6
+select procedure_date,category,doctor_id,patient_id,name,price,sum(price)over(order by procedure_date range between unbounded preceding and current row)
+from procedure;
+
+Q7
+select id,procedure_date,name,price,lag(price)over(order by id),price-lag(price)over(order by id)
+from procedure;
+
+Q8
+select id,procedure_date,name,price,lag(price)over(order by id),price-lag(price)over(order by id)
+from procedure;
+
+Q9
+select name,score,price,category,avg(price)over(partition by category) as avg_price,avg(score)over(partition by category) as avg_score, dense_rank()over(partition by category order by score desc)
+from procedure;
+
+Q10
+select procedure_date,name,price,category,score,first_value(price)over(partition by category order by score desc) as best_procedure, price-first_value(price)over(partition by category order by score desc) as difference
+from procedure;
+
+Q11
+WITH ref_table AS (
+SELECT
+p.name AS procedure_name
+, d.first_name
+, d.last_name
+, score
+, AVG(score) OVER (PARTITION BY p.name) AS avg_score_for_procedure
+FROM procedure p LEFT JOIN doctor d
+ON p.doctor_id = d.id
+),
+
+counts AS (
+SELECT
+procedure_name
+, first_name
+, last_name
+, COUNT(1) AS cnt
+FROM ref_table
+WHERE score >= avg_score_for_procedure
+GROUP BY procedure_name, first_name, last_name
+),
+
+ranks AS (
+SELECT
+procedure_name
+, first_name
+, last_name
+, RANK() OVER (PARTITION BY procedure_name ORDER BY cnt DESC) AS rnk
+FROM counts
+)
+
+SELECT
+procedure_name AS name
+, first_name
+, last_name
+FROM ranks
+WHERE rnk = 1
+;
