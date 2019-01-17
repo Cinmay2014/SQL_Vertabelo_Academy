@@ -1,0 +1,23 @@
+2.over() 
+exercise 1 select first_name,last_name, years_worked,avg(years_worked)over() from employee where department_id in (1,3,5) 
+exercise 2 select purchase.id,department.name,item,price,min(price)over(),price-min(price)over() from purchase join department on purchase.department_id=department.id 3. OVER(PARTITION BY) 14.exercise 1 select first_name,last_name,department,salary,min(salary)over(partition by department),max(salary)over(partition by department) from employee; 15.exercise 2 select first_name,last_name, department,salary,cast(salary as numeric)/sum(salary)over(partition by department) from employee; 4. Ranking Functions exercise 1 select name,average_rating,rank()over(order by average_rating desc) from application; exercise 2 with ranking as (select name,downloads,rank()over(order by downloads desc) as rank from application ) select name,downloads from ranking where rank = 3;
+
+Window Frame 
+exercise 1 select department_id,year,amount,sum(amount)over(order by year rows 2 preceding) from revenue where department_id=2;
+exercise 2 select department_id,year,amount,avg(amount)over(order by year ) from revenue where department_id=1;
+exercise 3 select department_id,year,amount,avg(amount)over(order by year range current row), amount-avg(amount)over(order by year range current row) from revenue;
+
+Analytics functions 
+Exercise 1 select day, price,lead(price)over() from advertisement;
+Exercise 2 select day, price,lag(price,7)over(),price-lag(price,7)over() from advertisement;
+Exercise 3 select day,price,max(price)over() as highest_price,min(price)over() as lowest_price from advertisement;
+
+PARTITION BY ORDER BY 
+Exercise 1 with ranking as ( select phone, day, rank()over(partition by day order by free_repairs desc) as rank from repairs ) select day,phone from ranking where rank =2;
+Exercise 2 select phone,day,revenue,first_value(revenue)over(partition by phone order by day ) as first_revenue from repairs;
+Exercise 3 select phone,day,paid_repairs,lag(paid_repairs)over(partition by phone order by day),paid_repairs-lag(paid_repairs)over(partition by phone) from repairs;
+
+Window functions - evaluation order 
+Exercise 1 select bucket,min(rating),max(rating) from (select rating,ntile(4)over(order by rating)as bucket from book) c group by bucket;
+Exercise 2 select author_id,count(id)as number_of_books,rank()over(order by count(id) desc ) from book group by author_id;
+Exercise 3 select publish_year,count(id),lag(count(id))over(order by publish_year) from book group by publish_year order by publish_year;
