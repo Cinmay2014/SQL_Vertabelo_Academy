@@ -1,0 +1,244 @@
+#Pretty Printing
+Exercise 1
+select id, upper(name),initcap(type)
+from item
+
+Exercise 2
+select substring(text,5,16)
+from slogan
+where length(text) > 20;
+
+Exercise 3
+select i.name, i.type,replace(s.text,'.','!!!')
+from slogan s
+join item i
+on s.item_id = i.id
+where s.type = 'tv commercial';
+
+#Numeric functions
+Exercise 1
+select name, round(cast(weight AS numeric)/ height^2 ) as bmi
+from character;
+
+Exercise 2
+select floor(cast(account_balance as numeric)/50) as potion_amount, mod(account_balance,50) as change
+from character
+where account_balance >= 100;
+
+Exercise 3
+SELECT name, ((strength + cast(hp/4.0 as numeric)) * abs(stat_modifier)) as damage
+FROM character
+WHERE level >=3 AND class = 'warrior';
+
+Exercise 4
+select p.firstname, p.lastname, c.level, round(cast(c.height as decimal),2),floor(c.account_balance)
+from player p
+join character c
+on p.id = c.player_id
+where p.id in (1,5);
+
+#Date and time functions
+Exercise 1
+select code, from_airport, to_airport
+from route
+where departure between '9:00:00' and '15:00:00';
+
+Exercise 2
+select r.from_airport, r.to_airport, a.model
+from flight f
+join route r
+on f.route_code = r.code
+join aircraft a
+on f.aircraft_id = a.id
+where f.date = '2015-07-11';
+
+Exercise 3
+select avg(delay)
+from flight
+where extract(month from date) = '08';
+
+Exercise 4
+select r.code, count(f.id),avg(f.delay)
+from route r
+join flight f
+on r.code = f.route_code
+where date< current_date-interval '6' month
+group by r.code;
+
+Exercise 5
+select extract(year from date), avg(delay)
+from flight
+group by extract(year from date);
+
+Exercise 6
+select count(distinct a.id)
+from flight f
+join aircraft a
+on f.aircraft_id = a.id
+where f.date between '2015-08-01' and cast('2015-08-01' as date) + interval '1' month;
+
+#Nulls
+Exercise 1
+select name, launch_date
+from product
+where launch_date != '2015-02-25' or launch_date is null;
+
+Exercise 2
+select name, COALESCE(CAST(NULLIF(price,19.99) AS varchar),'unknown') as price
+from product;
+
+Exercise 3
+select id, name, category
+from product
+order by name desc;
+
+Exercise 4
+select a.id,a.country, coalesce(cast(a.start_date as varchar),'n/a'), coalesce(cast(a.end_date as varchar), 'n/a'), coalesce(p.name,'no name')
+from advertisement a
+join product p
+on a.product_id = p.id
+order by a.start_date asc;
+
+Exercise 5
+select p.id,count(a.id)
+from product p
+left join advertisement a
+on p.id = a.product_id
+where p.name is not NULL
+group by p.id
+order by p.id desc;
+
+Exercise 6
+select a.id,'The advertisement with id '||a.id||' for the product '|| COALESCE(p.name,CAST(p.id AS varchar),'no name')|| ' was started on '||COALESCE(CAST(a.start_date as varchar), 'n/a')||'.'
+from advertisement a
+join product p
+on a.product_id = p.id
+where p.price is not null;
+
+#Aggregate functions
+Exercise 1
+select count(*),count(distinct client_id),avg(price)
+from project;
+
+Exercise 2
+select t.first_name, t.last_name,count(p.project_id),max(p.words),round(avg(price))
+from translator t
+left join project p
+on t.translator_id = p.translator_id
+group by t.first_name, t.last_name;
+
+Exercise 3
+select distinct lang_from,lang_to, avg(coalesce(price,0))
+from project
+group by lang_from,lang_to;
+
+Exercise 4
+select c.name, count(p.project_id)
+from client c
+left join project p
+on c.client_id = p.client_id
+group by c.name
+having count(p.client_id)>1;
+
+#Case when
+Exercise 1
+select name, 
+ case 
+  when graduate_satisfaction >80 then 'satisfied'
+  when graduate_satisfaction >50 then 'moderately satisfied'
+  when graduate_satisfaction <=50 then 'not satisfied'
+ end
+from course;
+
+Exercise 2
+select sum(case when score_math >=60 and score_language>=60 then 1 else 0 end) as versatile_candidates,
+
+sum(case when score_math <40 and score_language<40 then 1 else 0 end) as poor_candidates
+
+from candidate
+where preferred_contact is not null;
+
+Exercise 3
+select c.name as name,
+ case
+  when count(a.candidate_id) >=5 then 'high'
+  else 'low'
+ end as popularity
+from application a
+left join course c
+on a.course_id = c.id
+group by c.name;
+
+Exercise 4
+select c.name as name, c.place_limit as place_limit, count(a.candidate_id),
+ case
+  when count(a.candidate_id) > c.place_limit then 'overcrowded'
+  else 'within limit'
+ end as popularity
+from application a
+left join course c
+on a.course_id = c.id
+group by c.name, c.place_limit;
+
+#Final Quiz
+Exercise 1
+select initcap(first_name)||' '||initcap(coalesce(middle_name,''))||' ' ||upper(last_name) as full_name
+from person
+where length(last_name)>=7;
+
+Exercise 2
+select substring(p.first_name,1,1)||substring(p.middle_name,1,1)||substring(p.last_name,1,1)||' lives in '||b.city|| ' and weighs '||round(p.weight)||' kilograms.'
+from person p
+left join branch b
+on p.branch_id=b.id;
+
+Exercise 3
+select first_name, last_name, weight, floor(weight) as weight_down, ceil(weight) as weight_up
+from person;
+
+Exercise 4
+select b.id,b.country,b.city, round(avg(coalesce(p.iq,152)),2)
+from person p
+left join branch b
+on p.branch_id = b.id
+group by b.id, b.country, b.city;
+
+Exercise 5
+select first_name, last_name,current_date-registration_date
+from person
+where registration_date < current_date - interval '3' month;
+
+Exercise 6
+select extract(month from registration_date) as month, count(*)
+from person 
+where extract(year from registration_date) = 2015
+group by extract(month from registration_date);
+
+Exercise 7
+select first_name, last_name, 
+case
+   when iq <149 then 'high'
+   when iq between 149 and 152 then 'very high'
+   when iq >152 then 'highest'
+   when iq is null then 'missing'
+end as iq_rating
+from person;
+
+Exercise 8
+select b.id, b.country, b.city, sum(case when p.iq =156 then 1 else 0 end) as num_of_highest
+from person p
+left join branch b
+on p.branch_id = b.id
+group by b.id, b.country, b.city;
+
+Exercise 9
+select b.id,b.country,b.city,
+sum(case when p.iq <149 then 1 else 0 end) as count_high,
+sum(case when p.iq between 149 and 152 then 1 else 0 end) as count_very_high,
+sum(case when p.iq >152 then 1 else 0 end) as count_highest
+from person p
+left join branch b
+on p.branch_id= b.id
+group by 1,2,3;
+
+
